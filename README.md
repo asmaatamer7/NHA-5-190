@@ -8,9 +8,14 @@ Milestone 1 data foundation is ready for team review. The repository includes a 
 
 The canonical M1 split inventory, tested M2 LAB color component and provisional
 [attribute target/mask handoff](docs/m2/attributes.md) are merged.
-Run [the current sample pipeline](docs/m1/run_pipeline.md) to verify splits,
-prepare garments and extract palettes. Full raw-image training and the final M2
-model/feature cache still require the remaining inputs and owner components.
+Eyad's [Polyvore feature-cache assembler](docs/m2/polyvore_feature_cache.md) now
+assembles all 14,657 accepted M1 Polyvore validation items using actual LAB palettes
+and pinned CLIP embeddings. Source datasets have been
+[recovered and checked](docs/data_recovery.md). The
+[October 18 readiness audit](docs/audit/M1_M2_READINESS_2026-10-18.md) records passing
+software checks and the remaining gates: attribute-model training, model/taxonomy
+approval, and an approved policy for overlap in the recovered Polyvore splits.
+The additional training/test populations still need feature integration for M3.
 
 - **Fashionpedia:** provisionally selected for garment boxes, masks, categories, and attributes.
 - **Polyvore Outfits:** selected for compatibility and recommendation using the disjoint split.

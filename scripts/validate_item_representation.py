@@ -1,11 +1,10 @@
-"""Lightweight validator for configs/m1/item_output_schema.json records.
+"""Validate records against the frozen M2 JSON Schema and semantic rules.
 
-No external dependencies (does not require the `jsonschema` package) so every
-component owner can run it with a stock Python 3 install.
+Requires the project's data extra, which includes jsonschema.
 
 Usage (from the repository root):
-    python scripts/validate_item_output.py data/samples/item_output/examples.json
-    python scripts/validate_item_output.py --record '{"item_id": "...", ...}'
+    python scripts/validate_item_representation.py data/samples/items_representation/examples.json
+    python scripts/validate_item_representation.py --record '{"item_id": "...", ...}'
 
 Exit code is 1 if any record fails. Prints one line per record: OK or a list
 of specific reasons.
@@ -13,6 +12,12 @@ of specific reasons.
 import argparse
 import json
 import sys
+from pathlib import Path
+
+from jsonschema import Draft7Validator
+
+SCHEMA_PATH = Path(__file__).resolve().parents[1] / "configs/m2/item_representation_contract.json"
+SCHEMA_VALIDATOR = Draft7Validator(json.loads(SCHEMA_PATH.read_text(encoding="utf-8")))
 
 COMMON_CATEGORIES = {"top", "bottom", "one_piece", "outerwear", "footwear", "bag",
                       "headwear", "eyewear", "scarf", "jewellery", "accessory_other"}
@@ -30,8 +35,19 @@ def validate_record(r, errors):
     if not isinstance(r, dict):
         return err("record is not a JSON object", errors)
 
+    try:
+        json.dumps(r, allow_nan=False)
+    except (TypeError, ValueError):
+        return err("record must contain JSON values and finite numbers only", errors)
+    schema_errors = list(SCHEMA_VALIDATOR.iter_errors(r))
+    if schema_errors:
+        for error in schema_errors:
+            path = ".".join(str(part) for part in error.absolute_path) or "record"
+            err(f"{path}: {error.message}", errors)
+        return
+
     if r.get("schema_version") != "1.0.0":
-        err(f"schema_version must be '0.1.0', got {r.get('schema_version')!r}", errors)
+        err(f"schema_version must be '1.0.0', got {r.get('schema_version')!r}", errors)
 
     if not isinstance(r.get("item_id"), str) or not r["item_id"]:
         err("item_id must be a non-empty string", errors)
@@ -75,8 +91,8 @@ def validate_record(r, errors):
                 st = (mask or {}).get(k)
                 if st not in ATTR_STATUSES:
                     err(f"attributes.mask[{k!r}] invalid status {st!r}", errors)
-                if st == "not_annotated" and v is not None:
-                    err(f"attributes.scores[{k!r}] must be null when mask says not_annotated (never guess a value)", errors)
+                if st in {"not_annotated", "unavailable_in_source"} and v is not None:
+                    err(f"attributes.scores[{k!r}] must be null when mask says {st} (never guess a value)", errors)
 
     color = r.get("color", {})
     if not isinstance(color, dict):
@@ -131,6 +147,8 @@ def main():
         if isinstance(data, dict) and ("valid_examples" in data or "invalid_examples" in data):
             any_fail = False
             for r in data.get("valid_examples", []):
+                # Only the annotated example envelope permits documentation metadata.
+                r = {key: value for key, value in r.items() if key != "_comment"}
                 errors = []
                 validate_record(r, errors)
                 label = r.get("item_id", "?")
