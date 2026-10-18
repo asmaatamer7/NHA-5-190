@@ -140,3 +140,52 @@ def test_fashion_mnist_uses_omar_split_unchanged(tmp_path):
     sp = out.merge(pd.DataFrame(spl), on="item_id")
     assert (sp.split == sp.target_split).all()  # Omar's assignment untouched
     assert out.split_source.eq("m1_split_manifest").all() and out.label.nunique() == 10
+
+
+def test_checkpoint_reload_does_not_download_pretrained_weights(tmp_path, monkeypatch):
+    torch = pytest.importorskip("torch")
+    pytest.importorskip("torchvision")
+    from src.wardiq.clothing import resnet_category as resnet
+
+    model = resnet.build_model(2, [], pretrained=False)
+    checkpoint = tmp_path / "synthetic_checkpoint.pt"
+    torch.save(
+        {"state_dict": model.state_dict(), "classes": ["0", "1"], "config": {"image_size": 32}},
+        checkpoint,
+    )
+    original = resnet.models.resnet50
+
+    def offline_resnet(**kwargs):
+        assert kwargs["weights"] is None, "Inference must use the supplied checkpoint only"
+        return original(**kwargs)
+
+    monkeypatch.setattr(resnet.models, "resnet50", offline_resnet)
+    reloaded, classes, size = resnet.load_for_inference(str(checkpoint))
+    assert classes == ["0", "1"] and size == 32
+    assert all(
+        torch.equal(value, reloaded.state_dict()[name])
+        for name, value in model.state_dict().items()
+    )
+
+
+def test_reload_check_handles_numeric_labels_and_rejects_mismatch(tmp_path, monkeypatch):
+    pytest.importorskip("torch")
+    pytest.importorskip("torchvision")
+    from src.wardiq.clothing import resnet_category as resnet
+
+    pd.DataFrame([{"item_id": "001", "pred": "0"}]).to_csv(
+        tmp_path / "val_predictions.csv", index=False
+    )
+    frame = pd.DataFrame([{"item_id": "001", "image_ref": "synthetic"}])
+    monkeypatch.setattr(resnet, "load_for_inference", lambda *args: (None, ["0", "1"], 32))
+    monkeypatch.setattr(resnet, "open_image", lambda *args: None)
+    monkeypatch.setattr(
+        resnet, "predict_item", lambda *args: {"category": {"common_category": "0"}}
+    )
+    resnet.reload_check(tmp_path, {"image_root": str(tmp_path)}, frame, ["0", "1"], "cpu")
+    assert json.loads((tmp_path / "reload_check.json").read_text()) == {"checked": 1, "matching": 1}
+    monkeypatch.setattr(
+        resnet, "predict_item", lambda *args: {"category": {"common_category": "1"}}
+    )
+    with pytest.raises(ValueError, match="differ"):
+        resnet.reload_check(tmp_path, {"image_root": str(tmp_path)}, frame, ["0", "1"], "cpu")

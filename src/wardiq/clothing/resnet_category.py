@@ -143,8 +143,9 @@ def check_image_coverage(df: pd.DataFrame, image_root: str) -> pd.DataFrame:
     return df.assign(image_ok=ok)
 
 
-def build_model(num_classes: int, unfreeze: list[str]) -> nn.Module:
-    m = models.resnet50(weights=models.ResNet50_Weights.IMAGENET1K_V2)
+def build_model(num_classes: int, unfreeze: list[str], pretrained: bool = True) -> nn.Module:
+    weights = models.ResNet50_Weights.IMAGENET1K_V2 if pretrained else None
+    m = models.resnet50(weights=weights)
     for p in m.parameters():
         p.requires_grad = False
     m.fc = nn.Linear(m.fc.in_features, num_classes)  # new head is always trainable
@@ -349,7 +350,7 @@ def run(cfg: dict[str, Any], final_test: bool = False) -> Any:
 
 def load_for_inference(ckpt_path: str, device: str = "cpu") -> Any:
     ck = torch.load(ckpt_path, map_location=device)
-    m = build_model(len(ck["classes"]), [])
+    m = build_model(len(ck["classes"]), [], pretrained=False)
     m.load_state_dict(ck["state_dict"])
     m.to(device).eval()
     return m, ck["classes"], ck["config"]["image_size"]
@@ -376,7 +377,7 @@ def predict_item(
 def reload_check(out: Any, cfg: Any, df: Any, classes: Any, device: Any) -> None:
     """Acceptance check: the saved checkpoint reloads and reproduces the saved predictions."""
     model, cls, size = load_for_inference(out / "checkpoint.pt", device)
-    saved = pd.read_csv(out / "val_predictions.csv").head(20)
+    saved = pd.read_csv(out / "val_predictions.csv", dtype={"item_id": str, "pred": str}).head(20)
     sub = df.set_index("item_id").loc[saved.item_id]
     same = 0
     for iid, r in sub.iterrows():
@@ -386,6 +387,8 @@ def reload_check(out: Any, cfg: Any, df: Any, classes: Any, device: Any) -> None
         same += int(pred == saved.set_index("item_id").loc[iid, "pred"])
     (out / "reload_check.json").write_text(json.dumps({"checked": len(saved), "matching": same}))
     print(f"reload check: {same}/{len(saved)} sample predictions reproduced")
+    if same != len(saved):
+        raise ValueError("Reloaded checkpoint predictions differ from saved validation predictions")
 
 
 if __name__ == "__main__":

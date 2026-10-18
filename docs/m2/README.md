@@ -7,12 +7,12 @@ Files:
 |---|---|
 | Frozen contract (JSON Schema) | `configs/m2/item_representation_contract.json` — v1.0.0 |
 | Validator | `scripts/validate_item_representation.py` |
-| Integrated sample records | `data/samples/item_representation/examples.json` |
+| Integrated sample records | `data/samples/items_representation/examples.json` |
 | Tiny M3 consumer example | `scripts/m3_consumer_example.py` |
 
 Reproduce:
 ```bash
-python scripts/validate_item_representation.py data/samples/item_representation/examples.json
+python scripts/validate_item_representation.py data/samples/items_representation/examples.json
 python scripts/m3_consumer_example.py
 ```
 
@@ -47,7 +47,11 @@ OK      polyvore_outfits_disjoint_validation_114380093
 OK      fashion_mnist_train_000000
 CORRECTLY REJECTED   (x4, each with a stated reason)
 ```
-Exit code 0. Full reasons are in `data/samples/item_representation/examples.json`.
+Exit code 0. Full reasons are in `data/samples/items_representation/examples.json`.
+These are annotated interface examples, not proof of completed model inference.
+Their top-level `_comment` fields are documentation metadata and must be removed
+before applying the strict JSON Schema to an item record. Use the actual cache
+and its inventory for feature-coverage evidence.
 
 ## Changelog
 

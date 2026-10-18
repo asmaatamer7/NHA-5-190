@@ -5,6 +5,10 @@ derived files go under `processed/`, and each inventoried source image has one r
 in `manifests/raw_manifest.csv`. Inventory presence does not establish that every
 raw file is available in a teammate's clone.
 
+The October 18 [local source recovery](../docs/data_recovery.md) restored and
+verified the original M1 populations against the preserved manifest. See that
+report for current paths, scope and additional training-data status.
+
 ## Directory convention
 
 ```text
@@ -62,6 +66,6 @@ Committed Fashion-MNIST PNGs are enlarged previews, not native 28x28 loader inpu
 
 ## Current limitations
 
-- Fashionpedia is provisionally selected until its training annotations are downloaded and verified. The public repository exposes train and validation annotations plus test image information; it does not expose labeled test annotations. [Official downloads](https://github.com/cvdfoundation/fashionpedia#download)
+- Fashionpedia training annotations and images were recovered and verified on October 18. That population has not yet been integrated into the accepted training manifests or used to train the attribute model. The public release supplies training/validation annotations and test image information. [Recovery status](../docs/data_recovery.md)
 - DeepFashion-MultiModal is documented as a backup, but no local sample has been checked. [Official repository](https://github.com/yumingj/DeepFashion-MultiModal)
 - The manifest records only data currently available to the team. Regenerate it after new official files are added.
