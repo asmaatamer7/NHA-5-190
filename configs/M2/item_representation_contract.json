@@ -1,0 +1,328 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "wardiq://m2/item_representation_contract/1.0.0",
+  "title": "WARDIQ item-output record",
+  "schema_version": "1.0.0",
+  "status": "frozen",
+  "description": "FROZEN M2->M3 item representation contract. Reviewed and accepted by Omar and Hana per docs/HANDOFFS.md acceptance chain (M2 to M3: Omar, Hana, Asmaa). Frozen here means the SHAPE (field names, types, null rules, ranges) is locked, not that every model/version identifier is final -- embedding.provisional_dimension stays true until Eyad/Hayat confirm a model in the cache phase. Breaking changes require a new major version and downstream revalidation (see docs/m2/README.md changelog).",
+  "type": "object",
+  "required": [
+    "schema_version",
+    "item_id",
+    "source_dataset",
+    "category",
+    "attributes",
+    "color",
+    "embedding",
+    "formality",
+    "season",
+    "split"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "schema_version": {
+      "const": "1.0.0",
+      "description": "Version of THIS interface, not of taxonomy.json. Bump on any breaking or additive field change; see versioning rule in docs/m1/item_output_interface.md."
+    },
+    "item_id": {
+      "type": "string",
+      "minLength": 1,
+      "description": "Stable item id, identical to the id used in clean_manifest.csv / garment_manifest.csv. Never regenerated downstream."
+    },
+    "source_dataset": {
+      "enum": [
+        "Fashion-MNIST",
+        "Fashionpedia",
+        "Polyvore Outfits",
+        "DeepFashion-MultiModal"
+      ]
+    },
+    "category": {
+      "type": "object",
+      "required": [
+        "source_category_id",
+        "source_label",
+        "common_category",
+        "mapping_status",
+        "category_schema_version",
+        "confidence"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "source_category_id": {
+          "type": [
+            "integer",
+            "string",
+            "null"
+          ],
+          "description": "null only if source_dataset has no category concept at all (not the case for any current source)."
+        },
+        "source_label": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "common_category": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "top",
+            "bottom",
+            "one_piece",
+            "outerwear",
+            "footwear",
+            "bag",
+            "headwear",
+            "eyewear",
+            "scarf",
+            "jewellery",
+            "accessory_other",
+            null
+          ],
+          "description": "null when mapping_status is 'unmapped' or 'not_a_garment'. NOT an approved cross-dataset vocabulary yet -- see docs/m1/item_output_interface.md section 1."
+        },
+        "mapping_status": {
+          "enum": [
+            "direct",
+            "approximate",
+            "ambiguous",
+            "unmapped",
+            "not_a_garment"
+          ],
+          "description": "Copied verbatim from configs/m1/taxonomy.json's category_map entry for this source_category_id. Never re-derived downstream."
+        },
+        "category_schema_version": {
+          "type": "string",
+          "description": "taxonomy.json 'taxonomy_version' this record's category fields were computed against, e.g. '1.0.0'. Lets a consumer detect a stale mapping if taxonomy.json is later revised."
+        },
+        "confidence": {
+          "type": [
+            "number",
+            "null"
+          ],
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Classifier confidence for common_category. MUST be null until a classifier actually runs -- do not default to 1.0 for source-labeled ground truth and do not default to 0.0 for unmapped. null means 'not computed', not 'zero confidence'."
+        }
+      }
+    },
+    "attributes": {
+      "type": "object",
+      "required": [
+        "vocabulary_source",
+        "vocabulary_version",
+        "scores",
+        "mask"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "vocabulary_source": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "enum": [
+            "fashionpedia_v1_partial",
+            null
+          ],
+          "description": "null when source_dataset has no attribute concept (Fashion-MNIST, Polyvore). 'fashionpedia_v1_partial' is PROVISIONAL: only 35 of the official 294 attribute names are verified locally (see open item in docs). Do not treat the current ordering as final."
+        },
+        "vocabulary_version": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "null unless vocabulary_source is set."
+        },
+        "scores": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "null when unavailable_in_source. When present: keys are attribute names from vocabulary_source, in strict ascending alphabetical order (the required attribute-vector ordering -- see docs). Every value is a float in [0,1], or null for not_annotated. A record with attributes.mask says 'not_annotated' for an attribute name MUST have scores[name]=null, never 0.0.",
+          "additionalProperties": {
+            "type": [
+              "number",
+              "null"
+            ],
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "mask": {
+          "type": [
+            "object",
+            "null"
+          ],
+          "description": "Same keys as scores. Value is the missing-value status per attribute: 'present', 'not_annotated', or 'unavailable_in_source'.",
+          "additionalProperties": {
+            "enum": [
+              "present",
+              "not_annotated",
+              "unavailable_in_source"
+            ]
+          }
+        }
+      }
+    },
+    "color": {
+      "type": "object",
+      "required": [
+        "model",
+        "model_version",
+        "palette"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "null until a color-extraction model runs. Never fabricate a palette from the raw pixels as a substitute."
+        },
+        "model_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "palette": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "description": "null until model is set. When present: 1-8 CIELAB swatches, each with a proportion of the garment crop area. Proportions across one record's palette must sum to 1.0 +/- 0.01.",
+          "minItems": 1,
+          "maxItems": 8,
+          "items": {
+            "type": "object",
+            "required": [
+              "L",
+              "a",
+              "b",
+              "proportion"
+            ],
+            "additionalProperties": false,
+            "properties": {
+              "L": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 100,
+                "description": "CIE L*, perceptual lightness."
+              },
+              "a": {
+                "type": "number",
+                "minimum": -128,
+                "maximum": 127,
+                "description": "CIE a*, green-red."
+              },
+              "b": {
+                "type": "number",
+                "minimum": -128,
+                "maximum": 127,
+                "description": "CIE b*, blue-yellow."
+              },
+              "proportion": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              }
+            }
+          }
+        }
+      }
+    },
+    "embedding": {
+      "type": "object",
+      "required": [
+        "model",
+        "model_version",
+        "dimension",
+        "provisional_dimension",
+        "vector"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "model": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "model_version": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "dimension": {
+          "type": [
+            "integer",
+            "null"
+          ],
+          "minimum": 1,
+          "description": "Must be agreed with Hayat before being treated as final. provisional_dimension=true means this number can still change."
+        },
+        "provisional_dimension": {
+          "type": "boolean",
+          "description": "true until Hayat confirms the final embedding dimension in writing. Defaults to true; a consumer must not hard-code array length while this is true."
+        },
+        "vector": {
+          "type": [
+            "array",
+            "null"
+          ],
+          "items": {
+            "type": "number"
+          },
+          "description": "null until embeddings are actually computed. Length must equal 'dimension' when both are non-null."
+        }
+      }
+    },
+    "formality": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "const": null,
+      "description": "Not populated in M1. Must stay null until a validated source/model exists for it -- never inferred from category or color as a stand-in."
+    },
+    "season": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "const": null,
+      "description": "Not populated in M1. Same rule as formality."
+    },
+    "split": {
+      "type": "object",
+      "required": [
+        "target_split",
+        "leakage_group_id"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "target_split": {
+          "enum": [
+            "train",
+            "validation",
+            "test",
+            null
+          ]
+        },
+        "leakage_group_id": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "description": "The grouping unit that must not span splits. For Polyvore this is the part of Omar's group_id BEFORE the ':' (the outfit id) -- never the raw group_id string, which is unique per row and not a leakage group. For Fashionpedia this is the source image id (several annotations share one image and must stay together). null only for sources with no grouping concept at all (Fashion-MNIST: one image = one item, no sharing)."
+        }
+      }
+    }
+  }
+}

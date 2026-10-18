@@ -1,0 +1,130 @@
+{
+  "valid_examples": [
+    {
+      "_comment": "Fashionpedia top, real annotation, attributes partly present/not_annotated, nothing modeled yet.",
+      "schema_version": "1.0.0",
+      "item_id": "fashionpedia_val_ann_002555",
+      "source_dataset": "Fashionpedia",
+      "category": {
+        "source_category_id": 1,
+        "source_label": "top, t-shirt, sweatshirt",
+        "common_category": "top",
+        "mapping_status": "direct",
+        "category_schema_version": "1.0.0",
+        "confidence": null
+      },
+      "attributes": {
+        "vocabulary_source": "fashionpedia_v1_partial",
+        "vocabulary_version": "35_verified_names_2026-09-23",
+        "scores": {"classic (t-shirt)": 1.0, "loose (fit)": null, "plain (pattern)": 1.0, "symmetrical": 1.0},
+        "mask": {"classic (t-shirt)": "present", "loose (fit)": "not_annotated", "plain (pattern)": "present", "symmetrical": "present"}
+      },
+      "color": {"model": null, "model_version": null, "palette": null},
+      "embedding": {"model": null, "model_version": null, "dimension": null, "provisional_dimension": true, "vector": null},
+      "formality": null,
+      "season": null,
+      "split": {"target_split": "validation", "leakage_group_id": "13290"}
+    },
+    {
+      "_comment": "Polyvore bag, no attribute concept in source, leakage_group_id is the outfit id (before ':'), a color palette already computed (model output filled in as an example of a later, more complete record).",
+      "schema_version": "1.0.0",
+      "item_id": "polyvore_outfits_disjoint_validation_114380093",
+      "source_dataset": "Polyvore Outfits",
+      "category": {
+        "source_category_id": null,
+        "source_label": "bags",
+        "common_category": "bag",
+        "mapping_status": "direct",
+        "category_schema_version": "1.0.0",
+        "confidence": null
+      },
+      "attributes": {"vocabulary_source": null, "vocabulary_version": null, "scores": null, "mask": null},
+      "color": {
+        "model": "kmeans_lab_palette",
+        "model_version": "0.1.0",
+        "palette": [
+          {"L": 12.4, "a": 0.8, "b": -1.1, "proportion": 0.71},
+          {"L": 38.2, "a": 2.3, "b": 6.9, "proportion": 0.22},
+          {"L": 61.0, "a": -0.4, "b": 3.1, "proportion": 0.07}
+        ]
+      },
+      "embedding": {"model": null, "model_version": null, "dimension": null, "provisional_dimension": true, "vector": null},
+      "formality": null,
+      "season": null,
+      "split": {"target_split": "validation", "leakage_group_id": "223369815"}
+    },
+    {
+      "_comment": "Fashion-MNIST, smoke-test scope only, no attributes, no grouping concept, embedding filled with a provisional dimension.",
+      "schema_version": "1.0.0",
+      "item_id": "fashion_mnist_train_000000",
+      "source_dataset": "Fashion-MNIST",
+      "category": {
+        "source_category_id": 9,
+        "source_label": "Ankle boot",
+        "common_category": "footwear",
+        "mapping_status": "direct",
+        "category_schema_version": "1.0.0",
+        "confidence": null
+      },
+      "attributes": {"vocabulary_source": null, "vocabulary_version": null, "scores": null, "mask": null},
+      "color": {"model": null, "model_version": null, "palette": null},
+      "embedding": {"model": "resnet18_avgpool", "model_version": "0.1.0-provisional", "dimension": 512, "provisional_dimension": true, "vector": null},
+      "formality": null,
+      "season": null,
+      "split": {"target_split": "train", "leakage_group_id": null}
+    }
+  ],
+
+  "invalid_examples": [
+    {
+      "_comment": "INVALID: mapping_status is 'not_a_garment' but common_category is still set to a real bucket.",
+      "reason": "category.common_category must be null when mapping_status is unmapped/not_a_garment -- a part/decoration category cannot also carry a garment bucket",
+      "record": {
+        "schema_version": "1.0.0", "item_id": "fashionpedia_val_ann_008921", "source_dataset": "Fashionpedia",
+        "category": {"source_category_id": 32, "source_label": "pocket", "common_category": "top", "mapping_status": "not_a_garment", "category_schema_version": "1.0.0", "confidence": null},
+        "attributes": {"vocabulary_source": "fashionpedia_v1_partial", "vocabulary_version": "35_verified_names_2026-09-23", "scores": {"welt (pocket)": 1.0}, "mask": {"welt (pocket)": "present"}},
+        "color": {"model": null, "model_version": null, "palette": null},
+        "embedding": {"model": null, "model_version": null, "dimension": null, "provisional_dimension": true, "vector": null},
+        "formality": null, "season": null, "split": {"target_split": "validation", "leakage_group_id": "13297"}
+      }
+    },
+    {
+      "_comment": "INVALID: an unannotated attribute was scored 0.0 instead of null -- treats missing as a confirmed negative.",
+      "reason": "attributes.scores must be null wherever attributes.mask says not_annotated; 0.0 silently claims the attribute is confirmed absent",
+      "record": {
+        "schema_version": "1.0.0", "item_id": "fashionpedia_val_ann_002555", "source_dataset": "Fashionpedia",
+        "category": {"source_category_id": 1, "source_label": "top, t-shirt, sweatshirt", "common_category": "top", "mapping_status": "direct", "category_schema_version": "1.0.0", "confidence": null},
+        "attributes": {"vocabulary_source": "fashionpedia_v1_partial", "vocabulary_version": "35_verified_names_2026-09-23",
+          "scores": {"classic (t-shirt)": 1.0, "loose (fit)": 0.0, "plain (pattern)": 1.0, "symmetrical": 1.0},
+          "mask": {"classic (t-shirt)": "present", "loose (fit)": "not_annotated", "plain (pattern)": "present", "symmetrical": "present"}},
+        "color": {"model": null, "model_version": null, "palette": null},
+        "embedding": {"model": null, "model_version": null, "dimension": null, "provisional_dimension": true, "vector": null},
+        "formality": null, "season": null, "split": {"target_split": "validation", "leakage_group_id": "13290"}
+      }
+    },
+    {
+      "_comment": "INVALID: LAB palette proportions don't sum to 1.0, and season was guessed from category instead of left null.",
+      "reason": "color.palette proportions must sum to ~1.0 (here they sum to 0.5); season must stay null until a validated source exists",
+      "record": {
+        "schema_version": "1.0.0", "item_id": "polyvore_outfits_disjoint_validation_114380093", "source_dataset": "Polyvore Outfits",
+        "category": {"source_category_id": null, "source_label": "bags", "common_category": "bag", "mapping_status": "direct", "category_schema_version": "1.0.0", "confidence": null},
+        "attributes": {"vocabulary_source": null, "vocabulary_version": null, "scores": null, "mask": null},
+        "color": {"model": "kmeans_lab_palette", "model_version": "0.1.0", "palette": [{"L": 12.4, "a": 0.8, "b": -1.1, "proportion": 0.3}, {"L": 38.2, "a": 2.3, "b": 6.9, "proportion": 0.2}]},
+        "embedding": {"model": null, "model_version": null, "dimension": null, "provisional_dimension": true, "vector": null},
+        "formality": null, "season": "all-season", "split": {"target_split": "validation", "leakage_group_id": "223369815"}
+      }
+    },
+    {
+      "_comment": "INVALID: embedding vector length doesn't match the declared dimension.",
+      "reason": "embedding.vector length (3) must equal embedding.dimension (512) when both are non-null",
+      "record": {
+        "schema_version": "1.0.0", "item_id": "fashion_mnist_train_000000", "source_dataset": "Fashion-MNIST",
+        "category": {"source_category_id": 9, "source_label": "Ankle boot", "common_category": "footwear", "mapping_status": "direct", "category_schema_version": "1.0.0", "confidence": null},
+        "attributes": {"vocabulary_source": null, "vocabulary_version": null, "scores": null, "mask": null},
+        "color": {"model": null, "model_version": null, "palette": null},
+        "embedding": {"model": "resnet18_avgpool", "model_version": "0.1.0-provisional", "dimension": 512, "provisional_dimension": true, "vector": [0.1, 0.2, 0.3]},
+        "formality": null, "season": null, "split": {"target_split": "train", "leakage_group_id": null}
+      }
+    }
+  ]
+}
