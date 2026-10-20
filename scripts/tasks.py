@@ -27,6 +27,7 @@ SCOPE = [
     "scripts/extract_color_palettes.py",
     "scripts/validate_m1_splits.py",
     "scripts/m2",
+    "scripts/m3",
     "reports/m2/build_attribute_support.py",
     "reports/m2/build_sample_prediction.py",
     "reports/m2/build_supported_attribute_coverage.py",
@@ -55,6 +56,7 @@ def main() -> int:
         "colors": ["scripts/extract_color_palettes.py"],
         "attributes": ["scripts/m2/run_attribute_handoff.py"],
         "garments": ["scripts/prepare_garment_crops.py"],
+        "m3-data": ["scripts/m3/prepare_compatibility_data.py"],
         "m1-eda": ["scripts/inspect_m1_manifest.py"],
     }
     parser = argparse.ArgumentParser(description=__doc__)
