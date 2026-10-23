@@ -233,9 +233,12 @@ class PairFeatureBuilder:
             )
         ).ravel()
         mapped = float(left["category"] != "unknown" and right["category"] != "unknown")
-        result = np.concatenate(
-            (category, [mapped, np.dot(a, b)], np.abs(a - b), a * b, colors, attributes)
-        ).astype(np.float32)
+        result: NDArray[np.float32] = np.asarray(
+            np.concatenate(
+                (category, [mapped, np.dot(a, b)], np.abs(a - b), a * b, colors, attributes)
+            ),
+            dtype=np.float32,
+        )
         if result.shape != (self.config["dimension"],) or not np.isfinite(result).all():
             raise ValueError("Invalid feature output")
         return result
