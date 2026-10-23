@@ -1,0 +1,9 @@
+{
+  "full_run_producer_sha256": "1693b9e5dfae583a5231c200f9635c6b4b6aba66a2b4bd0dcf85db26a31d27e1",
+  "full_run_producer_snapshot": "verification/extraction_runner_used.py",
+  "shipped_runner_sha256": "2e56696d8e2e2da90af1213611d4e25e44868fc57bc8a712692710f866e49ed6",
+  "difference": "Additional fail-fast output guard: resume requires the original run.json. Model, preprocessing, chunk extraction and merging are unchanged.",
+  "shipped_runner_real_eight_image_smoke": "passed",
+  "final_focused_tests": 31,
+  "original_repo_changed": false
+}

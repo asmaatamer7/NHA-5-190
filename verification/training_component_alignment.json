@@ -1,0 +1,7 @@
+{
+  "items_checked": 50567,
+  "global_model_inventory_vector_join": "passed",
+  "canonical_ids_categories_image_hashes_split_join": "passed",
+  "no_fabricated_attributes": "passed",
+  "unmapped_common_categories": 62
+}

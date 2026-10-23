@@ -1,0 +1,11 @@
+{
+  "scope": "Qualitative check of first 24 training contact-sheet records only",
+  "sample_records": 24,
+  "whole_population_visual_approval": false,
+  "observations": [
+    "Garment palettes show plausible main fabric colors in the inspected sample.",
+    "White/background colors dominate some thin accessories (necklace/bracelet); original background-risk flags are retained."
+  ],
+  "algorithm_changed": false,
+  "review_status": "sample_checked_full_color_quality_acceptance_pending"
+}
