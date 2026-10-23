@@ -1,0 +1,61 @@
+{
+  "prepared_for": "Hayat M3 assignment, assisted by Eyad",
+  "status": "implemented_and_executed_pending_protocol_and_downstream_review",
+  "original_repository_files_unchanged": 222,
+  "original_commit": "6227b5b061242a04a5b55fe54f7ae3b6dfe17f01",
+  "full_training_items": 50567,
+  "validation_required_items": 14416,
+  "train": {
+    "rows_checked": 251008,
+    "positive_labels": 125518,
+    "negative_labels": 125490,
+    "all_pair_ids_labels_embedding_blocks_masks_checked": true,
+    "sampled_lab_checks": 2486,
+    "dimension": 1214,
+    "finite_float32": true
+  },
+  "validation": {
+    "rows_checked": 67869,
+    "positive_labels": 33956,
+    "negative_labels": 33913,
+    "all_pair_ids_labels_embedding_blocks_masks_checked": true,
+    "sampled_lab_checks": 672,
+    "dimension": 1214,
+    "finite_float32": true
+  },
+  "focused_tests_passed": 36,
+  "regression_tests_passed": 192,
+  "regression_subtests_passed": 6,
+  "strict_module_typecheck": "passed",
+  "lint_and_format": "passed",
+  "minimum_python_310_syntax": "passed",
+  "training_attributes_unavailable_and_masked": true,
+  "test_features_generated": false,
+  "protocol_approved": false,
+  "final_m2_cache_accepted": false,
+  "near_duplicate_product_leakage_verified": false,
+  "environment": {
+    "numpy": "2.5.4",
+    "pandas": "3.0.5",
+    "torch": "2.14.1",
+    "transformers": "5.19.0",
+    "scikit-learn": "1.9.0",
+    "Pillow": "12.3.0"
+  },
+  "limits": [
+    "Provisional 35-name attribute vocabulary; no Polyvore attribute predictions",
+    "Exact ID/hash split checks do not establish product-level near-duplicate freedom",
+    "LAB on product photos may include background; visual review remains pending",
+    "Model training, candidates, scoring/ranking and milestone acceptance remain owner review/work"
+  ],
+  "final_software_test_scope": "Final guarded CLIP runner + parallel LAB orchestration + pair feature code, in a clean copy; Windows/Python 3.13",
+  "lab_execution": {
+    "workers": 6,
+    "numerical_threads_per_worker": 1,
+    "original_extractor_unchanged": true,
+    "orchestrator_sha256": "84123dd5464ae0c9053950c29d8c98225b0f02d73ea7ef1b34995ca06374c3b2",
+    "real_eight_image_parallel_vs_serial_palette_parity": "exact",
+    "successful_training_palettes": 50567
+  },
+  "runner_source_binding": "Full CLIP producer snapshot and guarded shipped runner recorded separately in verification/runner_revision.json; pinned model/preprocessing unchanged"
+}

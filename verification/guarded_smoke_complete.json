@@ -1,0 +1,13 @@
+{
+  "manifest_sha256": "cba1fe00ac98694e44bfb34703fad7b284cfd18a48dabab0bf897f0bdd611b1a",
+  "items": 8,
+  "chunk_size": 8,
+  "batch_size": 8,
+  "model": "openai/clip-vit-base-patch32",
+  "revision": "3d74acf9a28c67741b2f4f2ea7635f0aaf6f0268",
+  "outputs": {
+    "clip_embeddings.npy": "2ab5d55257d2cbc7cb21e9d2bbfbbe1518e3dddd9459a82c9d5f057f168451cd",
+    "clip_inventory.csv": "bb472df3dd34a018481aa2bf1d7868ba0da93f2222471fc0e2f623cd97f09d64",
+    "metadata.json": "81c5b14c518ef3ff3cf97ebebcb6150c41990800982c7f80619cadb4eeb689bd"
+  }
+}
