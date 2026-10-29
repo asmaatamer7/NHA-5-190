@@ -10,6 +10,8 @@ from pathlib import Path
 import numpy as np
 import pytest
 
+from wardiq.compatibility.rule_baseline import score_pair_features
+
 PACKAGE = Path(__file__).resolve().parents[1]
 sys.path.insert(0, str(PACKAGE / "scripts/m3"))
 import build_pair_features as cli  # noqa: E402
@@ -303,3 +305,17 @@ def test_checkpoint_resume_and_tamper_detection(tmp_path, monkeypatch):
         extraction.extract(manifest, unrelated, resume=True)
     with pytest.raises(ValueError, match="configuration differs"):
         extraction.extract(manifest, out, chunk_size=3, resume=True)
+
+
+def test_rule_baseline_integrates_with_real_pair_feature_builder():
+    obj = builder()
+    values = obj.transform_pair("a", "b")
+    names = obj.config["feature_names"]
+
+    score = score_pair_features(
+        feature_names=names,
+        feature_values=values.tolist(),
+    )
+
+    assert 0.0 <= score <= 1.0
+    assert score == pytest.approx(0.5)
