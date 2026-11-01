@@ -110,3 +110,37 @@ def test_feature_scoring_rejects_negative_color_distance_when_available():
             feature_names=FEATURE_NAMES,
             feature_values=[0.5, -0.1, 1.0],
         )
+
+
+def test_feature_scoring_rejects_mismatched_lengths():
+    with pytest.raises(ValueError, match="equal lengths"):
+        score_pair_features(
+            feature_names=["clip:cosine", "lab:both_available"],
+            feature_values=[0.5],
+        )
+
+
+def test_feature_scoring_is_independent_of_feature_order():
+    original = score_pair_features(
+        feature_names=FEATURE_NAMES,
+        feature_values=[0.8, 0.0, 1.0],
+    )
+
+    reordered = score_pair_features(
+        feature_names=[
+            "lab:both_available",
+            "clip:cosine",
+            "lab:expected_delta_e76_over_100",
+        ],
+        feature_values=[1.0, 0.8, 0.0],
+    )
+
+    assert reordered == pytest.approx(original)
+
+
+def test_feature_scoring_rejects_non_finite_color_distance():
+    with pytest.raises(ValueError, match="finite"):
+        score_pair_features(
+            feature_names=FEATURE_NAMES,
+            feature_values=[0.8, float("nan"), 1.0],
+        )
