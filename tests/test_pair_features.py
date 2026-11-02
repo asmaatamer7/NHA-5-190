@@ -312,10 +312,11 @@ def test_rule_baseline_integrates_with_real_pair_feature_builder():
     values = obj.transform_pair("a", "b")
     names = obj.config["feature_names"]
 
-    score = score_pair_features(
+    pair_score = score_pair_features(
         feature_names=names,
         feature_values=values.tolist(),
     )
 
-    assert 0.0 <= score <= 1.0
-    assert score == pytest.approx(0.5)
+    assert pair_score.status == "scored"
+    assert pair_score.score is not None
+    assert 0.0 <= pair_score.score <= 1.0

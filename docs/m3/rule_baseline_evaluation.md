@@ -1,71 +1,99 @@
-# M3 Rule Baseline Evaluation Protocol
+# M3 transparent rule baseline (draft, pending Hana's review)
 
-## Status
+## Purpose (draft, pending Hana's review)
 
-This document defines the evaluation procedure for the experimental rule-based pair compatibility baseline. It does not report completed evaluation results or approve the current scoring weights.
+This baseline gives each item pair a small, explainable heuristic score. It
+uses named signals from `PairFeatureBuilder`. It does not train a model and it
+does not use attributes. Training attribute values are masked; missing
+attributes must never be read as negative evidence.
 
-## 1. Purpose
+## Signals and weights (draft, pending Hana's review)
 
-Compare the interpretable rule baseline with the logistic-regression compatibility model on the same eligible evaluation examples.
+| Signal | Weight | Feature read | Value |
+| --- | ---: | --- | --- |
+| Embedding | 0.25 | `clip:cosine` | Clip cosine to the range [0, 1]. |
+| Colour | 0.35 | `lab:expected_delta_e76_over_100` | `1 - min(distance, 1.0)`. |
+| Category | 0.40 | `category:both_mapped` and the active `category:<a>|<b>` column | Look up the pair in the category rules below. |
 
-The rule baseline provides a transparent reference that can be inspected alongside the learned model.
+The score is the weighted average of available signals. The weights are
+renormalised over only the signals that are available. `weight_coverage` is
+the sum of their original weights. If coverage is below 0.5, the result has
+`score = null` and `status = "insufficient_evidence"`. Otherwise status is
+`"scored"`.
 
-## 2. Fair Comparison Requirements
+The category score uses this three-row rule table:
 
-- Use the same eligible item pairs and evaluation split for both models.
-- Preserve the official split identities and keep the test split locked until the project owners authorize its use.
-- Fit any learned model using training data only.
-- Do not use unavailable annotations as negative labels.
-- Record excluded pairs, their exclusion reasons, and the final number of evaluated pairs.
-- Record dataset, feature-cache, model, and configuration versions.
-- Do not compare results calculated on different populations as if they were directly comparable.
+| Rule | Score | Applies when |
+| --- | ---: | --- |
+| Complementary | 1.0 | top+bottom, top+footwear, bottom+footwear, one_piece+footwear, or outerwear paired with top, bottom, one_piece or footwear. |
+| Accessory | 0.7 | Either item is accessory_other, bag, eyewear, headwear, jewellery or scarf. |
+| Same or conflicting | 0.3 | Same category twice, top+one_piece, or bottom+one_piece. |
 
-## 3. Score Interpretation
+A mapped category pair without a rule is an error; it is not assigned a
+made-up score. The active category feature is found by its name, not by its
+position in the feature row.
 
-The current rule baseline returns an experimental heuristic score in the range [0, 1]. It is not a calibrated probability.
+## Missing-value rules (draft, pending Hana's review)
 
-The current weights, CLIP score mapping, color-distance transformation, and behavior when color information is unavailable are provisional. They require review by the responsible owners before being adopted as shared project decisions.
+1. **Embedding:** required and always used. A cosine of zero is a real zero
+   similarity; it is not missing.
+2. **Colour:** omitted when `lab:both_available` is 0. Its weight is not
+   treated as zero or as negative evidence.
+3. **Category:** omitted when `category:both_mapped` is 0. Its weight is not
+   treated as zero or as negative evidence.
 
-The draft `PairwiseScore` field named `probability` must not be populated with the heuristic score as though it were a probability unless the owners explicitly approve that contract decision.
+If only embedding is available, coverage is 0.25, below the 0.5 minimum, so
+there is no score. Attributes are not a fallback: their training values are
+masked and must never be interpreted as negative.
 
-## 4. Evaluation Metrics
+## Worked example (draft, pending Hana's review)
 
-Select metrics according to the availability and meaning of the evaluation labels.
+Suppose the embedding cosine is 0.8, the normalized colour distance is 0.4,
+and the category pair is complementary. The three signal values are 0.8,
+0.6 (`1 - 0.4`) and 1.0. All signals are available, so:
 
-Where valid binary pair-compatibility labels are available, consider ROC-AUC and average precision for comparing score discrimination. Report the eligible sample count and class distribution alongside these metrics.
+`score = (0.25 × 0.8 + 0.35 × 0.6 + 0.40 × 1.0) / 1.0 = 0.81`
 
-Only calculate metrics supported by the evaluation data and label definitions. Record the exact metric definitions and positive-class meaning. Do not report unmeasured results or introduce an unapproved acceptance threshold.
+If colour is missing, the score is renormalised over embedding and category:
 
-If ranking-level evaluation is required, document its relevance labels, candidate-generation policy, and approved ranking metrics separately. Pairwise metrics alone do not establish outfit-ranking quality.
+`score = (0.25 × 0.8 + 0.40 × 1.0) / 0.65 = 0.9231`
 
-## 5. Missing Information and Exclusions
+The second result also reports `weight_coverage = 0.65` and omits `colour`
+from `signals_used`.
 
-Record missing features separately from negative compatibility labels. For each model, document how unavailable feature values are handled.
+## Meaning and limitations (draft, pending Hana's review)
 
-For the rule baseline, the current implementation uses the CLIP-derived score when color information is unavailable. This behavior is experimental and must be reviewed before contract freeze.
+The result is a heuristic score in [0, 1], not a probability. It is not
+calibrated and must not be written into `PairwiseScore.probability`.
 
-Document invalid pairs, unresolved item IDs, missing annotations, and other exclusions. Apply the same eligibility policy to both models.
+Colour uses distance only. For example, black and white can have a large LAB
+distance and therefore receive a low colour score, even when the combination
+may be visually intentional. The weights and category table are hand-set and
+have not yet been reviewed or validated against human judgements. The score
+must not be described as a measured fashion-compatibility probability.
 
-## 6. Results Record
+## Draft outfit record for review with Hana (draft, pending Hana's review)
 
-For each evaluated model, record:
+Every field and behaviour below is a draft, pending Hana's review. This is a
+review example only; it does not change the shared contract.
 
-- Model name and version.
-- Dataset and evaluation split identifiers.
-- Number of eligible pairs and number excluded, with reasons.
-- Positive and negative label counts, where applicable.
-- Metric names, definitions, and measured values.
-- Feature-cache and configuration versions.
-- Any limitations that affect interpretation.
+- `outfit_id`: identifier for the candidate outfit. (draft, pending Hana's review)
+- `item_ids`: ordered item identifiers in the outfit. (draft, pending Hana's review)
+- `pairs`: pair identifiers plus `score`, `status`, `signals_used` and
+  `weight_coverage` for each pair. (draft, pending Hana's review)
+- `mean_ocs`: mean of pair scores, or `null` if any pair is unscored. (draft,
+  pending Hana's review)
+- `rank`: candidate rank assigned by the ranking stage. (draft, pending Hana's review)
+- `versions`: feature, baseline and candidate-generation versions. (draft,
+  pending Hana's review)
+- If any pair is unscored, `mean_ocs` is `null`; do not average only the
+  remaining pairs. (draft, pending Hana's review)
+- If a candidate is structurally invalid, candidate generation rejects it;
+  this baseline does not decide structural validity or assign its rank.
+  (draft, pending Hana's review)
 
-Do not fill in metric values until the evaluation has actually been run. Do not describe the rule baseline as better than the learned model without comparable results.
+## Scope boundary (draft, pending Hana's review)
 
-## 7. Contract and Approval Status
-
-The M3-to-M4 contract remains a draft until the responsible owners agree on pair-score semantics, score range, OCS aggregation, structural validity, Top-K behavior, tie-breaking, missing-item handling, and provenance.
-
-The current rule weights and missing-color behavior are experimental. Record the relevant owner decisions before treating them as approved project requirements.
-
-## 8. Current Completion Status
-
-The rule-baseline implementation and its unit and integration tests have been completed locally. Comparative evaluation against logistic regression, measured performance results, and final contract approval remain pending.
+Candidate generation owns structural validity and rejection. This module only
+scores pairs and computes the mean OCS when every pair has a score. It does not
+generate outfits, choose Top-K, resolve ties or freeze the M3-to-M4 contract.
